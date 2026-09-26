@@ -11,6 +11,13 @@ type Action struct {
 	Risky bool
 }
 
+// offers reports whether the Actions pane lists action id for kind r: the
+// kind has to support it, and in read-only mode it has to be one that only
+// reads.
+func (m *Model) offers(r domain.Kind, id string) bool {
+	return r.Can(id) && (!m.readOnly || domain.ReadOnlyAllows(id))
+}
+
 var Actions = []Action{
 	{domain.ADescribe, "d", "Describe", "󰈙", false},
 	{domain.AYAML, "y", "YAML", "󰈮", false},

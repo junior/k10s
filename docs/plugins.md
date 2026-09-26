@@ -69,7 +69,7 @@ The complete installable example is at `examples/plugins.yaml`.
 | `args` | argument list, with variables expanded before execution |
 | `background` | start detached and return to k10s immediately |
 | `confirm` | show a confirmation dialog before running |
-| `dangerous` | render the plugin and confirmation with danger styling |
+| `dangerous` | render the plugin and confirmation with danger styling; hidden in `--readonly` mode |
 | `override` | let the plugin replace a built-in keybinding |
 
 Without `override: true`, built-in k10s keys win. For shell syntax, pipes, or

@@ -221,6 +221,24 @@ bar. Three levels of "not now":
 Outside the TUI: `k10s update` and `k10s --version`. Full behaviour in
 [update.md](update.md).
 
+## Read-only mode (`k10s --readonly`)
+
+For looking at a cluster you must not change, such as production. The flag
+can go before or after `demo`.
+
+- The Actions pane keeps Describe, YAML, Logs and Top. Edit, Scale, Rollout
+  Restart, Cordon, Drain and Delete are gone, and so are Shell and Port
+  Forward, which open a session into the cluster. Their keys, `:scale`
+  included, answer with a notice instead of a dialog.
+- Plugins marked `dangerous: true` are hidden, as in k9s, and typed shell
+  commands do not run: they run as you, outside k10s, so read-only mode
+  cannot vouch for them.
+- The header says READ-ONLY for as long as the mode is on.
+- The same rule holds on the wire: every client k10s builds refuses, before
+  it leaves the machine, any request other than GET, HEAD or OPTIONS, and the
+  GETs that open exec, attach or port-forward streams. A code path the UI
+  missed still cannot write.
+
 ## AI settings (`/settings`)
 
 | Field    | Notes                                                                                                       |

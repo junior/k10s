@@ -22,6 +22,10 @@ func (m *Model) availablePlugins() []plugin.Named {
 	aliases = append(aliases, kind.Key, kind.Short, strings.ToLower(kind.Name))
 	out := make([]plugin.Named, 0, len(m.plugins))
 	for _, item := range m.plugins {
+		// k9s's rule: read-only mode drops the plugins marked dangerous.
+		if m.readOnly && item.Dangerous {
+			continue
+		}
 		if item.MatchesScope(aliases...) {
 			out = append(out, item)
 		}
@@ -79,6 +83,10 @@ func (m *Model) firePlugin(item plugin.Named) tea.Cmd {
 	}
 
 	label := pluginLabel(item)
+	if m.readOnly && item.Dangerous {
+		m.toast = "✗ read-only mode: " + label + " is marked dangerous"
+		return nil
+	}
 	vars := m.pluginVars()
 	if item.Confirm {
 		name, namespace := m.curName(), m.curNamespace()

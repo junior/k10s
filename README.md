@@ -128,6 +128,7 @@ Then run it:
 ```bash
 k10s                  # your current kubeconfig context
 k10s demo             # the built-in sample cluster, no cluster needed
+k10s --readonly       # look, never touch: nothing that changes the cluster
 k10s --version        # which build is this
 ```
 

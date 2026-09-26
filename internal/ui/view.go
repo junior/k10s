@@ -137,7 +137,13 @@ func (m *Model) viewHeader(l layout) Block {
 		demoTag = s(th.Warn).Bold(true).Render(" DEMO") +
 			s(th.Subtle).Render(" sample data · :ctx to leave")
 	}
-	line0 := brand + sep + s(ctxCol).Render(ctxTxt) + demoTag +
+	// Read-only mode is on screen for the same reason: the Actions pane is
+	// shorter because of it, which must never pass for missing permissions.
+	roTag := ""
+	if m.readOnly {
+		roTag = s(th.Warn).Bold(true).Render(" READ-ONLY")
+	}
+	line0 := brand + sep + s(ctxCol).Render(ctxTxt) + demoTag + roTag +
 		sep + s(th.Subtle).Render("ver ") + s(th.Fg).Render(ci.Version) +
 		sep + s(th.Subtle).Render("nodes ") + s(nodeCol).Render(nodeTxt)
 
@@ -857,7 +863,7 @@ func (m *Model) viewActions(w, h int) Block {
 	// its contents change legibly as you move between kinds.
 	shown := make([]Action, 0, len(Actions))
 	for _, a := range Actions {
-		if r.Can(a.ID) {
+		if m.offers(r, a.ID) {
 			shown = append(shown, a)
 		}
 	}

@@ -36,6 +36,10 @@ type Startup struct {
 	Contexts []string
 	Context  string
 	Connect  func(context string) (domain.Source, string)
+	// ReadOnly is --readonly: every action that would change the cluster, or
+	// open a session into it, is hidden and refused. internal/k8s enforces
+	// the same rule on the wire; this is the part the user sees.
+	ReadOnly bool
 }
 
 // NewStartup builds a model that is already renderable and connects in the
@@ -43,6 +47,7 @@ type Startup struct {
 func NewStartup(s Startup) *Model {
 	m := New(&pendingSource{kinds: s.Kinds, contexts: s.Contexts, ctx: s.Context})
 	m.connect = s.Connect
+	m.readOnly = s.ReadOnly
 	// A demo context is not something kubeconfig can hand back, so it has to
 	// be asked for by name; anything else stays "" — kubeconfig's
 	// current-context is the only cluster k10s opens on by itself.

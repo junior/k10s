@@ -47,6 +47,12 @@ func shellCommand() (string, string) {
 
 // runShellCmd runs line and returns its combined output as a text view.
 func (m *Model) runShellCmd(line string) tea.Cmd {
+	// A typed command runs as the user, outside the clients k10s guards, so
+	// read-only mode cannot vouch for it and does not run it.
+	if m.readOnly {
+		m.toast = "✗ read-only mode: shell commands are off"
+		return nil
+	}
 	title := "$ " + line
 	m.startBusy(trunc(title, 48))
 	m.toast = "… " + trunc(title, 48)

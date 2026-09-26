@@ -84,6 +84,11 @@ func New(path, context string) (*Client, error) {
 	}
 	restCfg.QPS = 50
 	restCfg.Burst = 100
+	// Before any client is built from it, so every one of them, and the
+	// discovery copy below, carries the guard.
+	if readOnly.Load() {
+		guardReadOnly(restCfg)
+	}
 
 	cs, err := kubernetes.NewForConfig(restCfg)
 	if err != nil {
