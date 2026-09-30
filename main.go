@@ -74,11 +74,13 @@ func noClusterReason(err error) string {
 }
 
 func main() {
+	args, readOnly := readOnlyFlag(os.Args[1:])
+
 	// Two things are worth doing without a TTY, so they are handled before
 	// anything opens a terminal: saying which build this is, and installing
 	// a new one. The second matters most when the TUI itself is what broke.
-	if len(os.Args) > 1 {
-		switch os.Args[1] {
+	if len(args) > 0 {
+		switch args[0] {
 		case "-v", "--version", "version":
 			fmt.Println(version.String())
 			return
@@ -95,6 +97,11 @@ func main() {
 	}
 
 	k8s.SilenceLogging()
+	// Before the first connection: only clients built after this carry the
+	// guard.
+	if readOnly {
+		k8s.SetReadOnly(true)
+	}
 
 	zone.NewGlobal()
 	defer zone.Close()
@@ -108,7 +115,7 @@ func main() {
 	// the whole implementation: the demo is not a mode the program is in,
 	// only the context it started on. Without the argument k10s shows what
 	// this machine can actually reach, and nothing else.
-	if len(os.Args) > 1 && (os.Args[1] == "demo" || os.Args[1] == "--demo") {
+	if len(args) > 0 && (args[0] == "demo" || args[0] == "--demo") {
 		curCtx = domain.DemoContext
 	}
 
@@ -117,6 +124,7 @@ func main() {
 		Contexts: ctxNames,
 		Context:  curCtx,
 		Connect:  newSource,
+		ReadOnly: readOnly,
 	})
 
 	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
@@ -187,6 +195,22 @@ func selfUpdate() error {
 	return nil
 }
 
+// readOnlyFlag takes --readonly (or --read-only) out of args wherever it
+// appears, so `k10s --readonly demo` and `k10s demo --readonly` both work,
+// and reports whether it was there.
+func readOnlyFlag(args []string) ([]string, bool) {
+	rest := make([]string, 0, len(args))
+	found := false
+	for _, a := range args {
+		if a == "--readonly" || a == "--read-only" {
+			found = true
+			continue
+		}
+		rest = append(rest, a)
+	}
+	return rest, found
+}
+
 func usage() {
 	fmt.Println(`k10s — clickable Kubernetes TUI
 
@@ -194,6 +218,11 @@ usage:
   k10s              open the dashboard against the current kubeconfig context
   k10s demo         open the built-in sample cluster (fake data, no cluster
                     needed) — k10s never shows this unless you ask for it
+  k10s --readonly   look, never touch: no edit, scale, restart, cordon,
+                    drain or delete, no shell or port-forward, and no
+                    dangerous plugins or typed shell commands. Every
+                    request that could change the cluster is refused before
+                    it leaves the machine. Works with demo too.
   k10s update       install the newest release over this binary
   k10s --version    print the running build
   k10s --help       this text

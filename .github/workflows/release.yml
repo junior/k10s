@@ -23,7 +23,13 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          # go.mod's `go` line is the oldest Go the code builds with, not the
+          # toolchain to ship with. Reading it here built every release so far
+          # with Go 1.26.0, whose standard library has since had many security
+          # fixes (crypto/tls, crypto/x509, net/http among them). Releases take
+          # the newest 1.26 patch instead; move this with go.mod's minor.
+          go-version: "1.26.x"
+          check-latest: true
           cache: true
 
       - name: test
@@ -34,6 +40,7 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          go version
           COMMIT=$(git rev-parse --short HEAD)
           DATE=$(date -u +%Y-%m-%d)
           STAMP="-X github.com/p10node/k10s/internal/version.Version=$VERSION -X github.com/p10node/k10s/internal/version.Commit=$COMMIT -X github.com/p10node/k10s/internal/version.Date=$DATE"

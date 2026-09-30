@@ -227,6 +227,11 @@ type Model struct {
 	connGen    int
 	connName   string
 
+	// readOnly is --readonly. Actions that change the cluster or open a
+	// session into it are hidden and refused, and so are dangerous plugins
+	// and typed shell commands; see domain.ReadOnlyAllows.
+	readOnly bool
+
 	// startTarget is the context the first connection asks for: "" (let
 	// kubeconfig choose) for a normal launch, the demo context for
 	// `k10s demo`.
@@ -1953,6 +1958,10 @@ func (m *Model) fireAction(a Action) tea.Cmd {
 		m.toast = fmt.Sprintf("✗ %s is not available for %s", a.Label, r.Name)
 		return nil
 	}
+	if m.readOnly && !domain.ReadOnlyAllows(a.ID) {
+		m.toast = "✗ read-only mode: " + a.Label + " is off"
+		return nil
+	}
 	if _, rows := m.tableData(); len(rows) == 0 {
 		m.toast = "✗ nothing selected"
 		return nil
@@ -2287,6 +2296,11 @@ func (m *Model) runSlash(cmd string) tea.Cmd {
 		return tea.Quit
 
 	case ":scale":
+		if m.readOnly {
+			m.toast = "✗ read-only mode: Scale is off"
+			m.closePrompt()
+			return nil
+		}
 		n, err := strconv.Atoi(arg)
 		if err != nil || n < 0 {
 			m.toast = "usage: /scale <replicas>"

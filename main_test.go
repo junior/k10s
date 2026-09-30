@@ -52,3 +52,24 @@ func TestNewSourceReportsNoClusterWhenAPIServerIsUnreachable(t *testing.T) {
 		t.Fatalf("warning = %q, want a failure reason, not a fallback to sample data", warning)
 	}
 }
+
+func TestReadOnlyFlagIsTakenOutWherever(t *testing.T) {
+	cases := []struct {
+		in   []string
+		rest []string
+		ro   bool
+	}{
+		{nil, []string{}, false},
+		{[]string{"demo"}, []string{"demo"}, false},
+		{[]string{"--readonly"}, []string{}, true},
+		{[]string{"--readonly", "demo"}, []string{"demo"}, true},
+		{[]string{"demo", "--read-only"}, []string{"demo"}, true},
+		{[]string{"--version"}, []string{"--version"}, false},
+	}
+	for _, c := range cases {
+		rest, ro := readOnlyFlag(c.in)
+		if ro != c.ro || strings.Join(rest, " ") != strings.Join(c.rest, " ") {
+			t.Errorf("readOnlyFlag(%q) = %q, %v; want %q, %v", c.in, rest, ro, c.rest, c.ro)
+		}
+	}
+}
