@@ -1,0 +1,32 @@
+# Dependabot proposes newer Go modules and GitHub Actions once a week. Its
+# commits are authored by a bot, which the DCO check skips, so they need no
+# Signed-off-by line.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    # Direct dependencies only. The indirect ones are pinned by what the
+    # direct ones require, and bumping one of them alone (kube-openapi, say)
+    # can break the k8s.io set; .github/workflows/test.yml runs govulncheck
+    # every week to catch a vulnerable one instead.
+    allow:
+      - dependency-type: direct
+    groups:
+      # client-go and the other k8s.io modules are released together and
+      # have to move together.
+      kubernetes:
+        patterns:
+          - "k8s.io/*"
+      charm:
+        patterns:
+          - "github.com/charmbracelet/*"
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"
