@@ -28,11 +28,12 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           # go.mod's `go` line is the oldest Go the code builds with, not the
-          # toolchain to ship with. Reading it here built every release so far
-          # with Go 1.26.0, whose standard library has since had many security
-          # fixes (crypto/tls, crypto/x509, net/http among them). Releases take
-          # the newest 1.26 patch instead; move this with go.mod's minor.
-          go-version: "1.26.x"
+          # toolchain to ship with: reading it here once built releases with
+          # Go 1.26.0, long after its standard library had security fixes
+          # (crypto/tls, crypto/x509, net/http among them). Releases take the
+          # newest patch of the current Go release instead; move this to
+          # 1.28.x when Go 1.28 comes out.
+          go-version: "1.27.x"
           check-latest: true
           cache: true
 
